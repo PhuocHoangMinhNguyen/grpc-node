@@ -28,9 +28,6 @@ const calcProtoDefinition = protoLoader.loadSync(calcProtoPath, {
 const calcPackageDefinition =
   grpc.loadPackageDefinition(calcProtoDefinition).calculator;
 
-/*
-  Implement the greet RPC method
-*/
 function greet(call, callback) {
   const firstName = call.request.greeting.first_name;
   const lastName = call.request.greeting.last_name;
