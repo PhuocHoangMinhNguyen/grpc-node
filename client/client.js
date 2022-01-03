@@ -6,11 +6,38 @@ var calcService = require("../server/protos/calculator_grpc_pb");
 
 var grpc = require("grpc");
 
+let fs = require("fs");
+
+let credentials = grpc.credentials.createSsl(
+  fs.readFileSync("../certs/ca.crt"),
+  fs.readFileSync("../certs/client.key"),
+  fs.readFileSync("../certs/client.crt")
+);
+
+let unsafeCreds = grpc.credentials.createInsecure();
+
+function getRPCDeadline(rpcType) {
+  timeAllowed = 5000;
+
+  switch (rpcType) {
+    case 1:
+      timeAllowed = 1000;
+      break;
+    case 2:
+      timeAllowed = 7000;
+      break;
+    default:
+      console.log("Invalid RPC Type: Using Default Timeout");
+  }
+  return new Date(Date.now() + timeAllowed);
+}
+
+function doErrorCall() {
+  var deadline = getRPCDeadline(1);
+}
+
 function callGreeting() {
-  var client = new service.GreetServiceClient(
-    "localhost:50051",
-    grpc.credentials.createInsecure()
-  );
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
 
   // create our request
   var request = new greets.GreetRequest();
@@ -32,10 +59,7 @@ function callGreeting() {
 }
 
 function callGreetManyTimes() {
-  var client = new service.GreetServiceClient(
-    "localhost:50051",
-    grpc.credentials.createInsecure()
-  );
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
 
   // create request
 
@@ -68,7 +92,7 @@ function callGreetManyTimes() {
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    grpc.credentials.createInsecure()
+    credentials
   );
 
   // create our request
@@ -95,7 +119,7 @@ function callSum() {
 function callPrimeNumberDecomposition() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    grpc.credentials.createInsecure()
+    credentials
   );
 
   var request = new calc.PrimeNumberDecompositionRequest();
@@ -124,9 +148,9 @@ function callPrimeNumberDecomposition() {
 }
 
 function main() {
-  callPrimeNumberDecomposition();
+  // callPrimeNumberDecomposition();
   // callGreetManyTimes();
-  // callGreeting();
+  callGreeting();
   // callSum();
 }
 main();

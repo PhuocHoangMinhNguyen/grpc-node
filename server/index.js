@@ -4,6 +4,8 @@ var service = require("../server/protos/greet_grpc_pb");
 var calc = require("../server/protos/calculator_pb");
 var calcService = require("../server/protos/calculator_grpc_pb");
 
+const fs = require("fs");
+
 var grpc = require("grpc");
 
 function greetManyTimes(call, callback) {
@@ -67,6 +69,19 @@ function sum(call, callback) {
 }
 
 function main() {
+  let credentials = grpc.ServerCredentials.createSsl(
+    fs.readFileSync("../certs/ca.crt"),
+    [
+      {
+        cert_chain: fs.readFileSync("../certs/server.crt"),
+        private_key: fs.readFileSync("../certs/server.key"),
+      },
+    ],
+    true
+  );
+
+  let unsafeCreds = grpc.ServerCredentials.createInsecure();
+
   var server = new grpc.Server();
   server.addService(service.GreetServiceService, {
     greet: greet,
@@ -77,7 +92,7 @@ function main() {
     sum: sum,
     primeNumberDecomposition: primeNumberDecomposition,
   });
-  server.bind("127.0.0.1:50051", grpc.ServerCredentials.createInsecure());
+  server.bind("127.0.0.1:50051", credentials);
   server.start();
 
   console.log("Server running on port 127.0.0.1:50051");
