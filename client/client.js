@@ -64,6 +64,29 @@ function callCreateBlog() {
   });
 }
 
+function callReadBlog() {
+  var client = new blogService.BlogServiceClient(
+    "localhost:50051",
+    unsafeCreds
+  );
+
+  var readBlogRequest = new blogs.ReadBlogRequest();
+  readBlogRequest.setBlogId("5");
+
+  client.readBlog(readBlogRequest, (error, response) => {
+    if (!error) {
+      console.log("Found a blog", response.toString());
+    } else {
+      if (error.code === grpc.status.NOT_FOUND) {
+        console.error("Not Found");
+      } else {
+        // Do something else ...
+        console.error(error);
+      }
+    }
+  });
+}
+
 function getRPCDeadline(rpcType) {
   timeAllowed = 5000;
 
@@ -224,6 +247,7 @@ function main() {
   // doErrorCall();
 
   // callListBlogs();
-  callCreateBlog();
+  // callCreateBlog();
+  callReadBlog();
 }
 main();

@@ -71,6 +71,42 @@ function createBlog(call, callback) {
       callback(null, blogResponse);
     });
 }
+
+function readBlog(call, callback) {
+  console.log("Received Blog request");
+
+  // get id
+  var blogId = call.request.getBlogId();
+
+  knex("blogs")
+    .where({ id: parseInt(blogId) })
+    .then((data) => {
+      console.log("Searching for a blog...");
+
+      if (data.length) {
+        var blog = new blogs.Blog();
+
+        console.log("Blog found and sending message");
+
+        // set the blog response to be returned
+        blog.setId(blogId);
+        blog.setAuthor(data[0].author);
+        blog.setTitle(data[0].title);
+        blog.setContent(data[0].content);
+
+        var blogResponse = new blogs.ReadBlogResponse();
+        blogResponse.setBlog(blog);
+
+        callback(null, blogResponse);
+      } else {
+        console.log("Blog not found");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: "Blog Not Found!",
+        });
+      }
+    });
+}
 // Blog CRUD End
 
 function greet(call, callback) {
@@ -182,6 +218,7 @@ function main() {
   server.addService(blogService.BlogServiceService, {
     listBlog: listBlog,
     createBlog: createBlog,
+    readBlog: readBlog,
   });
 
   server.bind("127.0.0.1:50051", unsafeCreds);
