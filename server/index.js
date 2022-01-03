@@ -151,6 +151,41 @@ function updateBlog(call, callback) {
       }
     });
 }
+
+function deleteBlog(call, callback) {
+  console.log("Received Delete Blog Request");
+
+  var blogId = call.request.getBlogId();
+
+  console.log("Searching for a blog to update...");
+
+  knex("blogs")
+    .where({
+      id: parseInt(blogId),
+    })
+    .delete()
+    .returning()
+    .then((data) => {
+      console.log("Blog deleting...");
+      if (data) {
+        var deleteBlogResponse = new blogs.DeleteBlogResponse();
+        deleteBlogResponse.setBlogId(blogId);
+
+        console.log(
+          "Blog request is now deleted with id:",
+          deleteBlogResponse.getBlogId()
+        );
+
+        callback(null, deleteBlogResponse);
+      } else {
+        console.log("Nope...");
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: "Blog with the corresponding id was not found",
+        });
+      }
+    });
+}
 // Blog CRUD End
 
 function greet(call, callback) {
@@ -264,6 +299,7 @@ function main() {
     createBlog: createBlog,
     readBlog: readBlog,
     updateBlog: updateBlog,
+    deleteBlog: deleteBlog,
   });
 
   server.bind("127.0.0.1:50051", credentials);
