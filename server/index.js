@@ -8,6 +8,17 @@ const fs = require("fs");
 
 var grpc = require("grpc");
 
+function greet(call, callback) {
+  var greeting = new greets.GreetResponse();
+  greeting.setResult(
+    "Hello " +
+      call.request.getGreeting().getFirstName() +
+      " " +
+      call.request.getGreeting().getLastName()
+  );
+  callback(null, greeting);
+}
+
 function greetManyTimes(call, callback) {
   var firstName = call.request.getGreeting().getFirstName();
 
@@ -23,6 +34,14 @@ function greetManyTimes(call, callback) {
         call.end(); // we have send all messages !
       }
     }, 1000);
+}
+
+function sum(call, callback) {
+  var sumResponse = new calc.SumResponse();
+  sumResponse.setSumResult(
+    call.request.getFirstNumber() + call.request.getSecondNumber()
+  );
+  callback(null, sumResponse);
 }
 
 function primeNumberDecomposition(call, callback) {
@@ -49,23 +68,23 @@ function primeNumberDecomposition(call, callback) {
   call.end(); // all messages end.
 }
 
-function greet(call, callback) {
-  var greeting = new greets.GreetResponse();
-  greeting.setResult(
-    "Hello " +
-      call.request.getGreeting().getFirstName() +
-      " " +
-      call.request.getGreeting().getLastName()
-  );
-  callback(null, greeting);
-}
+function squareRoot(call, callback) {
+  var number = call.request.getNumber();
 
-function sum(call, callback) {
-  var sumResponse = new calc.SumResponse();
-  sumResponse.setSumResult(
-    call.request.getFirstNumber() + call.request.getSecondNumber()
-  );
-  callback(null, sumResponse);
+  if (number >= 0) {
+    var numberRoot = Math.sqrt(number);
+    var response = new calc.SquareRootResponse();
+    response.setNumberRoot(numberRoot);
+
+    callback(null, response);
+  } else {
+    // Error handling
+    return callback({
+      code: grpc.status.INVALID_ARGUMENT,
+      message:
+        "The number being sent is not positive " + " Number sent: " + number,
+    });
+  }
 }
 
 function main() {
@@ -91,6 +110,7 @@ function main() {
   server.addService(calcService.CalculatorServiceService, {
     sum: sum,
     primeNumberDecomposition: primeNumberDecomposition,
+    squareRoot: squareRoot,
   });
   server.bind("127.0.0.1:50051", credentials);
   server.start();

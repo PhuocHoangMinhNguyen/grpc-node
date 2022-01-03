@@ -32,10 +32,6 @@ function getRPCDeadline(rpcType) {
   return new Date(Date.now() + timeAllowed);
 }
 
-function doErrorCall() {
-  var deadline = getRPCDeadline(1);
-}
-
 function callGreeting() {
   var client = new service.GreetServiceClient("localhost:50051", credentials);
 
@@ -147,10 +143,36 @@ function callPrimeNumberDecomposition() {
   });
 }
 
+function doErrorCall() {
+  var deadline = getRPCDeadline(1);
+
+  var client = new calcService.CalculatorServiceClient(
+    "localhost:50051",
+    credentials
+  );
+
+  var number = 25;
+  var squareRootRequest = new calc.SquareRootRequest();
+  squareRootRequest.setNumber(number);
+
+  client.squareRoot(
+    squareRootRequest,
+    { deadline: deadline },
+    (error, response) => {
+      if (!error) {
+        console.log("Square root is", response.getNumberRoot());
+      } else {
+        console.error(error.message);
+      }
+    }
+  );
+}
+
 function main() {
-  // callPrimeNumberDecomposition();
-  // callGreetManyTimes();
-  callGreeting();
+  // callGreeting();
   // callSum();
+  // callGreetManyTimes();
+  // callPrimeNumberDecomposition();
+  doErrorCall();
 }
 main();
