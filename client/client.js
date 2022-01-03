@@ -41,6 +41,29 @@ function callListBlogs() {
   });
 }
 
+function callCreateBlog() {
+  var client = new blogService.BlogServiceClient(
+    "localhost:50051",
+    unsafeCreds
+  );
+
+  var blog = new blogs.Blog();
+  blog.setAuthor("Johna");
+  blog.setTitle("First blog post");
+  blog.setContent("This is great...");
+
+  var blogRequest = new blogs.CreateBlogRequest();
+  blogRequest.setBlog(blog);
+
+  client.createBlog(blogRequest, (error, response) => {
+    if (!error) {
+      console.log("Received create blog response", response.toString());
+    } else {
+      console.error(error);
+    }
+  });
+}
+
 function getRPCDeadline(rpcType) {
   timeAllowed = 5000;
 
@@ -200,6 +223,7 @@ function main() {
   // callPrimeNumberDecomposition();
   // doErrorCall();
 
-  callListBlogs();
+  // callListBlogs();
+  callCreateBlog();
 }
 main();

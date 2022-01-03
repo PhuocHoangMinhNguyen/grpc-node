@@ -38,6 +38,39 @@ function listBlog(call, callback) {
     call.end(); // we are done writing!
   });
 }
+
+function createBlog(call, callback) {
+  console.log("Received Create Blog Request");
+
+  var blog = call.request.getBlog();
+
+  console.log("Inserting a Blog...");
+
+  knex("blogs")
+    .insert({
+      author: blog.getAuthor(),
+      title: blog.getTitle(),
+      content: blog.getContent(),
+    })
+    .then(() => {
+      var id = blog.getId();
+      var addedBlog = new blogs.Blog();
+
+      // set the blog response to be returned
+      addedBlog.setId(id);
+      addedBlog.setAuthor(blog.getAuthor());
+      addedBlog.setTitle(blog.getTitle());
+      addedBlog.setContent(blog.getContent());
+
+      var blogResponse = new blogs.CreateBlogResponse();
+
+      blogResponse.setBlog(addedBlog);
+
+      console.log("Inserted Blog with ID: ", blogResponse);
+
+      callback(null, blogResponse);
+    });
+}
 // Blog CRUD End
 
 function greet(call, callback) {
@@ -148,6 +181,7 @@ function main() {
 
   server.addService(blogService.BlogServiceService, {
     listBlog: listBlog,
+    createBlog: createBlog,
   });
 
   server.bind("127.0.0.1:50051", unsafeCreds);
