@@ -33,7 +33,7 @@ function getRPCDeadline(rpcType) {
 }
 
 function callGreeting() {
-  var client = new service.GreetServiceClient("localhost:50051", credentials);
+  var client = new service.GreetServiceClient("localhost:50051", unsafeCreds);
 
   // create our request
   var request = new greets.GreetRequest();
@@ -55,7 +55,7 @@ function callGreeting() {
 }
 
 function callGreetManyTimes() {
-  var client = new service.GreetServiceClient("localhost:50051", credentials);
+  var client = new service.GreetServiceClient("localhost:50051", unsafeCreds);
 
   // create request
 
@@ -88,7 +88,7 @@ function callGreetManyTimes() {
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    credentials
+    unsafeCreds
   );
 
   // create our request
@@ -115,7 +115,7 @@ function callSum() {
 function callPrimeNumberDecomposition() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    credentials
+    unsafeCreds
   );
 
   var request = new calc.PrimeNumberDecompositionRequest();
@@ -148,7 +148,7 @@ function doErrorCall() {
 
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    credentials
+    unsafeCreds
   );
 
   var number = 25;
@@ -169,10 +169,10 @@ function doErrorCall() {
 }
 
 function main() {
-  // callGreeting();
+  callGreeting();
   // callSum();
   // callGreetManyTimes();
   // callPrimeNumberDecomposition();
-  doErrorCall();
+  // doErrorCall();
 }
 main();

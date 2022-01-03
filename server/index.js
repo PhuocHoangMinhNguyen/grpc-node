@@ -8,6 +8,11 @@ const fs = require("fs");
 
 var grpc = require("grpc");
 
+// Knex requires
+const environment = process.env.ENVIRONMENT || "development";
+const config = require("/knexfile")[environment];
+const knex = require("knex")(config);
+
 function greet(call, callback) {
   var greeting = new greets.GreetResponse();
   greeting.setResult(
@@ -112,7 +117,7 @@ function main() {
     primeNumberDecomposition: primeNumberDecomposition,
     squareRoot: squareRoot,
   });
-  server.bind("127.0.0.1:50051", credentials);
+  server.bind("127.0.0.1:50051", unsafeCreds);
   server.start();
 
   console.log("Server running on port 127.0.0.1:50051");
