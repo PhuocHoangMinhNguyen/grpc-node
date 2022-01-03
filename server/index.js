@@ -4,14 +4,41 @@ var service = require("../server/protos/greet_grpc_pb");
 var calc = require("../server/protos/calculator_pb");
 var calcService = require("../server/protos/calculator_grpc_pb");
 
+var blogs = require("../server/protos/blog_pb");
+var blogService = require("../server/protos/blog_grpc_pb");
+
 const fs = require("fs");
 
 var grpc = require("grpc");
 
 // Knex requires
 const environment = process.env.ENVIRONMENT || "development";
-const config = require("/knexfile")[environment];
+const config = require("./knexfile")[environment];
 const knex = require("knex")(config);
+
+// Blog CRUD Start
+function listBlog(call, callback) {
+  console.log("Received list blog request");
+  knex("blogs").then((data) => {
+    data.forEach((element) => {
+      var blog = new blogs.Blog();
+      blog.setId(element.id);
+      blog.setAuthor(element.author);
+      blog.setTitle(element.title);
+      blog.setContent(element.content);
+
+      console.log("Blogs", blog.toString());
+
+      var blogResponse = new blogs.ListBlogResponse();
+      blogResponse.setBlog(blog);
+
+      // write to the stream
+      call.write(blogResponse);
+    });
+    call.end(); // we are done writing!
+  });
+}
+// Blog CRUD End
 
 function greet(call, callback) {
   var greeting = new greets.GreetResponse();
@@ -107,16 +134,22 @@ function main() {
   let unsafeCreds = grpc.ServerCredentials.createInsecure();
 
   var server = new grpc.Server();
-  server.addService(service.GreetServiceService, {
-    greet: greet,
-    greetManyTimes: greetManyTimes,
+
+  // server.addService(service.GreetServiceService, {
+  //   greet: greet,
+  //   greetManyTimes: greetManyTimes,
+  // });
+
+  // server.addService(calcService.CalculatorServiceService, {
+  //   sum: sum,
+  //   primeNumberDecomposition: primeNumberDecomposition,
+  //   squareRoot: squareRoot,
+  // });
+
+  server.addService(blogService.BlogServiceService, {
+    listBlog: listBlog,
   });
 
-  server.addService(calcService.CalculatorServiceService, {
-    sum: sum,
-    primeNumberDecomposition: primeNumberDecomposition,
-    squareRoot: squareRoot,
-  });
   server.bind("127.0.0.1:50051", unsafeCreds);
   server.start();
 

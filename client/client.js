@@ -4,6 +4,9 @@ var service = require("../server/protos/greet_grpc_pb");
 var calc = require("../server/protos/calculator_pb");
 var calcService = require("../server/protos/calculator_grpc_pb");
 
+var blogs = require("../server/protos/blog_pb");
+var blogService = require("../server/protos/blog_grpc_pb");
+
 var grpc = require("grpc");
 
 let fs = require("fs");
@@ -15,6 +18,28 @@ let credentials = grpc.credentials.createSsl(
 );
 
 let unsafeCreds = grpc.credentials.createInsecure();
+
+function callListBlogs() {
+  var client = new blogService.BlogServiceClient(
+    "localhost:50051",
+    unsafeCreds
+  );
+
+  var emptyBlogRequest = new blogs.ListBlogRequest();
+  var call = client.listBlog(emptyBlogRequest, () => {});
+
+  call.on("data", (response) => {
+    console.log("Client Streaming Response ", response.getBlog().toString());
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    console.log("End");
+  });
+}
 
 function getRPCDeadline(rpcType) {
   timeAllowed = 5000;
@@ -169,10 +194,12 @@ function doErrorCall() {
 }
 
 function main() {
-  callGreeting();
+  // callGreeting();
   // callSum();
   // callGreetManyTimes();
   // callPrimeNumberDecomposition();
   // doErrorCall();
+
+  callListBlogs();
 }
 main();
