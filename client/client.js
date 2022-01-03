@@ -31,6 +31,40 @@ function callGreeting() {
   });
 }
 
+function callGreetManyTimes() {
+  var client = new service.GreetServiceClient(
+    "localhost:50051",
+    grpc.credentials.createInsecure()
+  );
+
+  // create request
+
+  var request = new greets.GreetManyTimesRequest();
+
+  var greeting = new greets.Greeting();
+  greeting.setFirstName("Paulo");
+  greeting.setLastName("Dichone");
+  request.setGreeting(greeting);
+
+  var call = client.greetManyTimes(request, () => {});
+
+  call.on("data", (response) => {
+    console.log("Client Streaming Response: ", response.getResult());
+  });
+
+  call.on("status", (status) => {
+    console.log(status.details);
+  });
+
+  call.on("error", (error) => {
+    console.error(error.details);
+  });
+
+  call.on("end", () => {
+    console.log("Streaming end.");
+  });
+}
+
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
@@ -58,8 +92,41 @@ function callSum() {
   });
 }
 
+function callPrimeNumberDecomposition() {
+  var client = new calcService.CalculatorServiceClient(
+    "localhost:50051",
+    grpc.credentials.createInsecure()
+  );
+
+  var request = new calc.PrimeNumberDecompositionRequest();
+
+  var number = 567890;
+
+  request.setNumber(number);
+
+  var call = client.primeNumberDecomposition(request, () => {});
+
+  call.on("data", (response) => {
+    console.log("Prime Factors Found: ", response.getPrimeFactor());
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("status", (status) => {
+    console.log(status);
+  });
+
+  call.on("end", () => {
+    console.log("Streaming End.");
+  });
+}
+
 function main() {
-  callGreeting();
-  callSum();
+  callPrimeNumberDecomposition();
+  // callGreetManyTimes();
+  // callGreeting();
+  // callSum();
 }
 main();

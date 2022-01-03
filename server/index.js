@@ -6,9 +6,47 @@ var calcService = require("../server/protos/calculator_grpc_pb");
 
 var grpc = require("grpc");
 
-/*
-  Implement the greet RPC method
-*/
+function greetManyTimes(call, callback) {
+  var firstName = call.request.getGreeting().getFirstName();
+
+  let count = 0,
+    intervalID = setInterval(function () {
+      var greetManyTimesResponse = new greets.GreetManyTimesResponse();
+      greetManyTimesResponse.setResult(firstName);
+
+      // setup streaming
+      call.write(greetManyTimesResponse);
+      if (++count > 9) {
+        clearInterval(intervalID);
+        call.end(); // we have send all messages !
+      }
+    }, 1000);
+}
+
+function primeNumberDecomposition(call, callback) {
+  var number = call.request.getNumber();
+  var divisor = 2;
+
+  console.log("Received number: ", number);
+
+  while (number > 1) {
+    if (number % divisor === 0) {
+      var primeNumberDecompositionResponse =
+        new calc.PrimeNumberDecompositionResponse();
+      primeNumberDecompositionResponse.setPrimeFactor(divisor);
+      number = number / divisor;
+
+      // write the message using call.write()
+      call.write(primeNumberDecompositionResponse);
+    } else {
+      divisor++;
+      console.log("Divisor has increased to ", divisor);
+    }
+  }
+
+  call.end(); // all messages end.
+}
+
 function greet(call, callback) {
   var greeting = new greets.GreetResponse();
   greeting.setResult(
@@ -30,8 +68,15 @@ function sum(call, callback) {
 
 function main() {
   var server = new grpc.Server();
-  server.addService(service.GreetServiceService, { greet: greet });
-  server.addService(calcService.CalculatorServiceService, { sum: sum });
+  server.addService(service.GreetServiceService, {
+    greet: greet,
+    greetManyTimes: greetManyTimes,
+  });
+
+  server.addService(calcService.CalculatorServiceService, {
+    sum: sum,
+    primeNumberDecomposition: primeNumberDecomposition,
+  });
   server.bind("127.0.0.1:50051", grpc.ServerCredentials.createInsecure());
   server.start();
 
