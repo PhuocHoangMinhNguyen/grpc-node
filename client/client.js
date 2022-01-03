@@ -22,7 +22,7 @@ let unsafeCreds = grpc.credentials.createInsecure();
 function callListBlogs() {
   var client = new blogService.BlogServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   var emptyBlogRequest = new blogs.ListBlogRequest();
@@ -44,7 +44,7 @@ function callListBlogs() {
 function callCreateBlog() {
   var client = new blogService.BlogServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   var blog = new blogs.Blog();
@@ -67,7 +67,7 @@ function callCreateBlog() {
 function callReadBlog() {
   var client = new blogService.BlogServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   var readBlogRequest = new blogs.ReadBlogRequest();
@@ -76,6 +76,38 @@ function callReadBlog() {
   client.readBlog(readBlogRequest, (error, response) => {
     if (!error) {
       console.log("Found a blog", response.toString());
+    } else {
+      if (error.code === grpc.status.NOT_FOUND) {
+        console.error("Not Found");
+      } else {
+        // Do something else ...
+        console.error(error);
+      }
+    }
+  });
+}
+
+function callUpdateBlog() {
+  var client = new blogService.BlogServiceClient(
+    "localhost:50051",
+    credentials
+  );
+
+  var updateBlogRequest = new blogs.UpdateBlogRequest();
+
+  var newBlog = new blogs.Blog();
+
+  newBlog.setId("2");
+  newBlog.setAuthor("Garyyyyyyyy");
+  newBlog.setTitle("Hello World");
+  newBlog.setContent("this is great, again");
+
+  updateBlogRequest.setBlog(newBlog);
+
+  console.log("Blog...", newBlog.toString());
+
+  client.updateBlog(updateBlogRequest, (error, response) => {
+    if (!error) {
     } else {
       if (error.code === grpc.status.NOT_FOUND) {
         console.error("Not Found");
@@ -104,7 +136,7 @@ function getRPCDeadline(rpcType) {
 }
 
 function callGreeting() {
-  var client = new service.GreetServiceClient("localhost:50051", unsafeCreds);
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
 
   // create our request
   var request = new greets.GreetRequest();
@@ -126,7 +158,7 @@ function callGreeting() {
 }
 
 function callGreetManyTimes() {
-  var client = new service.GreetServiceClient("localhost:50051", unsafeCreds);
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
 
   // create request
 
@@ -159,7 +191,7 @@ function callGreetManyTimes() {
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   // create our request
@@ -186,7 +218,7 @@ function callSum() {
 function callPrimeNumberDecomposition() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   var request = new calc.PrimeNumberDecompositionRequest();
@@ -219,7 +251,7 @@ function doErrorCall() {
 
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
-    unsafeCreds
+    credentials
   );
 
   var number = 25;
@@ -248,6 +280,7 @@ function main() {
 
   // callListBlogs();
   // callCreateBlog();
-  callReadBlog();
+  // callReadBlog();
+  callUpdateBlog();
 }
 main();

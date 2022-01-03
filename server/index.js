@@ -107,6 +107,50 @@ function readBlog(call, callback) {
       }
     });
 }
+
+function updateBlog(call, callback) {
+  console.log("Received updated Blog Request");
+
+  var blogId = call.request.getBlog().getId();
+
+  console.log("Searching for a blog to update...");
+
+  knex("blogs")
+    .where({
+      id: parseInt(blogId),
+    })
+    .update({
+      author: call.request.getBlog().getAuthor(),
+      title: call.request.getBlog().getTitle(),
+      content: call.request.getBlog().getContent(),
+    })
+    .returning()
+    .then((data) => {
+      if (data) {
+        var blog = new blogs.Blog();
+
+        console.log("Blog found sending message...");
+
+        // set the blog response
+        blog.setId(blogId);
+        blog.setAuthor(data.author);
+        blog.setTitle(data.title);
+        blog.setContent(data.content);
+
+        var updateBlogResponse = new blogs.UpdateBlogResponse();
+        updateBlogResponse.setBlog(blog);
+
+        console.log("Updated ===", updateBlogResponse.getBlog().getId());
+
+        callback(null, updateBlogResponse);
+      } else {
+        return callback({
+          code: grpc.status.NOT_FOUND,
+          message: "Blog with the corresponding id was not found",
+        });
+      }
+    });
+}
 // Blog CRUD End
 
 function greet(call, callback) {
@@ -219,9 +263,10 @@ function main() {
     listBlog: listBlog,
     createBlog: createBlog,
     readBlog: readBlog,
+    updateBlog: updateBlog,
   });
 
-  server.bind("127.0.0.1:50051", unsafeCreds);
+  server.bind("127.0.0.1:50051", credentials);
   server.start();
 
   console.log("Server running on port 127.0.0.1:50051");
