@@ -216,6 +216,27 @@ function greetManyTimes(call, callback) {
     }, 1000);
 }
 
+function longGreet(call, callback) {
+  call.on("data", (request) => {
+    var fullName =
+      request.getGreet().getFirstName() +
+      " " +
+      request.getGreet().getLastName();
+    console.log("Hello", fullName);
+  });
+
+  call.on("error", (error) => {
+    console.log(error);
+  });
+
+  call.on("end", () => {
+    var response = new greets.LongGreetResponse();
+    response.setResult("Long Greet Client Streaming...");
+
+    callback(null, response);
+  });
+}
+
 function sum(call, callback) {
   var sumResponse = new calc.SumResponse();
   sumResponse.setSumResult(
@@ -267,6 +288,38 @@ function squareRoot(call, callback) {
   }
 }
 
+function computeAverage(call, callback) {
+  // running sum and count
+  var sum = 0;
+  var count = 0;
+
+  call.on("data", (request) => {
+    // increment sum
+    sum += request.getNumber();
+
+    console.log("Got number:", request.getNumber());
+
+    // increment count
+    count += 1;
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    // compute the actual average
+
+    var average = sum / count;
+
+    var response = new calc.ComputeAverageResponse();
+    response.setAverage(average);
+
+    callback(null, response);
+  });
+}
+("");
+
 function main() {
   let credentials = grpc.ServerCredentials.createSsl(
     fs.readFileSync("../certs/ca.crt"),
@@ -283,16 +336,18 @@ function main() {
 
   var server = new grpc.Server();
 
-  // server.addService(service.GreetServiceService, {
-  //   greet: greet,
-  //   greetManyTimes: greetManyTimes,
-  // });
+  server.addService(service.GreetServiceService, {
+    greet: greet,
+    greetManyTimes: greetManyTimes,
+    longGreet: longGreet,
+  });
 
-  // server.addService(calcService.CalculatorServiceService, {
-  //   sum: sum,
-  //   primeNumberDecomposition: primeNumberDecomposition,
-  //   squareRoot: squareRoot,
-  // });
+  server.addService(calcService.CalculatorServiceService, {
+    sum: sum,
+    primeNumberDecomposition: primeNumberDecomposition,
+    squareRoot: squareRoot,
+    computeAverage: computeAverage,
+  });
 
   server.addService(blogService.BlogServiceService, {
     listBlog: listBlog,

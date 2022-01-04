@@ -214,6 +214,48 @@ function callGreetManyTimes() {
   });
 }
 
+function callLongGreeting() {
+  //
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
+
+  var request = new greets.LongGreetRequest();
+
+  var call = client.longGreet(request, (error, response) => {
+    if (!error) {
+      console.log("Server Response: ", response.getResult());
+    } else {
+      console.error(error);
+    }
+  });
+
+  let count = 0,
+    intervalId = setInterval(function () {
+      console.log("Sending message " + count);
+
+      var request = new greets.LongGreetRequest();
+      var greeting = new greets.Greeting();
+      greeting.setFirstName("Paulo");
+      greeting.setLastName("Dichone");
+
+      request.setGreet(greeting);
+
+      var requestTwo = new greets.LongGreetRequest();
+      var greetingTwo = new greets.Greeting();
+      greetingTwo.setFirstName("Stephane");
+      greetingTwo.setLastName("Maarek");
+
+      requestTwo.setGreet(greetingTwo);
+
+      call.write(request);
+      call.write(requestTwo);
+
+      if (++count > 3) {
+        clearInterval(intervalId);
+        call.end();
+      }
+    }, 1000);
+}
+
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
@@ -272,6 +314,52 @@ function callPrimeNumberDecomposition() {
   });
 }
 
+function callComputeAverage() {
+  var client = new calcService.CalculatorServiceClient(
+    "localhost:50051",
+    credentials
+  );
+
+  // create our request
+  var request = new calc.ComputeAverageRequest();
+
+  var call = client.computeAverage(request, (error, response) => {
+    if (!error) {
+      console.log(
+        "Received a response from the server - Average:",
+        response.getAverage()
+      );
+    } else {
+      console.error(error);
+    }
+  });
+
+  var request = new calc.ComputeAverageRequest();
+  // request.setNumber(1);
+
+  for (var i = 0; i < 10000; i++) {
+    var request = new calc.ComputeAverageRequest();
+    request.setNumber(i);
+    call.write(request);
+  }
+
+  // var requestTwo = new calc.ComputeAverageRequest();
+  // requestTwo.setNumber(2);
+
+  // var requestThree = new calc.ComputeAverageRequest();
+  // requestThree.setNumber(3);
+
+  // var requestFour = new calc.ComputeAverageRequest();
+  // requestFour.setNumber(4);
+
+  // call.write(request);
+  // call.write(requestTwo);
+  // call.write(requestThree);
+  // call.write(requestFour);
+
+  call.end();
+}
+
 function doErrorCall() {
   var deadline = getRPCDeadline(1);
 
@@ -301,13 +389,15 @@ function main() {
   // callGreeting();
   // callSum();
   // callGreetManyTimes();
+  // callLongGreeting();
   // callPrimeNumberDecomposition();
+  callComputeAverage();
   // doErrorCall();
 
   // callListBlogs();
   // callCreateBlog();
   // callReadBlog();
   // callUpdateBlog();
-  callDeleteBlog();
+  // callDeleteBlog();
 }
 main();
