@@ -237,6 +237,44 @@ function longGreet(call, callback) {
   });
 }
 
+async function sleep(interval) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), interval);
+  });
+}
+
+async function greetEveryone(call, callback) {
+  call.on("data", (response) => {
+    var fullName =
+      response.getGreet().getFirstName() +
+      " " +
+      response.getGreet().getLastName();
+
+    console.log("Hello", fullName);
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    console.log("Server The End...");
+  });
+
+  for (var i = 0; i < 10; i++) {
+    // var greetingg = new greets.Greeting();
+    // greeting.setFirstName("Paulo");
+    // greeting.setLastName("Dichone");
+
+    var request = new greets.GreetEveryoneResponse();
+    request.setResult("Paulo Dichone");
+
+    call.write(request);
+    await sleep(1000);
+  }
+  call.end();
+}
+
 function sum(call, callback) {
   var sumResponse = new calc.SumResponse();
   sumResponse.setSumResult(
@@ -318,7 +356,42 @@ function computeAverage(call, callback) {
     callback(null, response);
   });
 }
-("");
+
+function findMaximum(call, callback) {
+  var currentMaximum = 0;
+  var currentNumber = 0;
+
+  call.on("data", (request) => {
+    currentNumber = request.getNumber();
+    if (currentNumber > currentMaximum) {
+      currentMaximum = currentNumber;
+
+      var response = new calc.FindMaximumResponse();
+      response.setMaximum(currentMaximum);
+
+      call.write(response);
+    } else {
+      // do nothing
+    }
+
+    console.log("Streamed number:", request.getNumber());
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    var response = new calc.FindMaximumResponse();
+    response.setMaximum(currentMaximum);
+
+    call.write(response);
+
+    call.end();
+
+    console.log("The end!");
+  });
+}
 
 function main() {
   let credentials = grpc.ServerCredentials.createSsl(
@@ -340,6 +413,7 @@ function main() {
     greet: greet,
     greetManyTimes: greetManyTimes,
     longGreet: longGreet,
+    greetEveryone: greetEveryone,
   });
 
   server.addService(calcService.CalculatorServiceService, {
@@ -347,6 +421,7 @@ function main() {
     primeNumberDecomposition: primeNumberDecomposition,
     squareRoot: squareRoot,
     computeAverage: computeAverage,
+    findMaximum: findMaximum,
   });
 
   server.addService(blogService.BlogServiceService, {

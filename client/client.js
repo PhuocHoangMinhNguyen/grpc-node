@@ -256,6 +256,48 @@ function callLongGreeting() {
     }, 1000);
 }
 
+async function sleep(interval) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), interval);
+  });
+}
+
+async function callGreetEveryone(call, callback) {
+  console.log("Hello I'm a gRPC client");
+
+  var client = new service.GreetServiceClient("localhost:50051", credentials);
+
+  var call = client.greetEveryone(request, (error, response) => {
+    console.log("Server Response: ", response);
+  });
+
+  call.on("data", (response) => {
+    console.log("Hello Client !", response.getResult());
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    console.log("Client The End");
+  });
+
+  for (var i = 0; i < 10; i++) {
+    var greeting = new greets.Greeting();
+    greeting.setFirstName("Stephane");
+    greeting.setLastName("Maarek");
+
+    var request = new greets.GreetEveryoneRequest();
+    request.setGreet(greeting);
+
+    call.write(request);
+
+    await sleep(1500);
+  }
+  call.end();
+}
+
 function callSum() {
   var client = new calcService.CalculatorServiceClient(
     "localhost:50051",
@@ -385,15 +427,50 @@ function doErrorCall() {
   );
 }
 
+async function callBiDiFindMaximum() {
+  var client = new calcService.CalculatorServiceClient(
+    "localhost:50051",
+    credentials
+  );
+
+  var call = client.findMaximum(request, (error, response) => {});
+
+  call.on("data", (response) => {
+    console.log("Got new Max from Server =>", response.getMaximum());
+  });
+
+  call.on("error", (error) => {
+    console.error(error);
+  });
+
+  call.on("end", () => {
+    console.log("Server is completed sending messages");
+  });
+
+  // data
+  let data = [3, 5, 17, 9, 8, 30, 12];
+  for (var i = 0; i < data.length; i++) {
+    var request = new calc.FindMaximumRequest();
+    console.log("Sending number:", data[i]);
+
+    request.setNumber(data[i]);
+    call.write(request);
+    await sleep(1000);
+  }
+  call.end(); // we are done sending messages
+  await sleep(1000);
+}
+
 function main() {
   // callGreeting();
-  // callSum();
   // callGreetManyTimes();
   // callLongGreeting();
+  // callGreetEveryone();
+  // callSum();
   // callPrimeNumberDecomposition();
-  callComputeAverage();
+  // callComputeAverage();
   // doErrorCall();
-
+  callBiDiFindMaximum();
   // callListBlogs();
   // callCreateBlog();
   // callReadBlog();
